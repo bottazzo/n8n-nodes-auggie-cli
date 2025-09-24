@@ -4,6 +4,10 @@
 
 Imagine having an AI coding assistant that can analyze your codebase, fix bugs, write new features, manage databases, interact with APIs, and automate your entire development workflow - all within n8n. That's exactly what this node enables.
 
+[![npm version](https://badge.fury.io/js/n8n-nodes-auggie-cli.svg)](https://badge.fury.io/js/n8n-nodes-auggie-cli)
+[![npm downloads](https://img.shields.io/npm/dm/n8n-nodes-auggie-cli.svg)](https://npmjs.com/package/n8n-nodes-auggie-cli)
+[![GitHub stars](https://img.shields.io/github/stars/bottazzo/n8n-nodes-auggie-cli.svg)](https://github.com/bottazzo/n8n-nodes-auggie-cli/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![n8n](https://img.shields.io/badge/n8n-community_node-orange.svg)](https://n8n.io/)
 [![Auggie CLI](https://img.shields.io/badge/Auggie%20CLI-Powered-blue.svg)](https://docs.augmentcode.com/cli/overview)
 [![npm](https://img.shields.io/npm/v/n8n-nodes-auggie-cli.svg)](https://www.npmjs.com/package/n8n-nodes-auggie-cli)
