@@ -63,11 +63,6 @@ class AuggieCli {
                     noDataExpression: true,
                     options: [
                         {
-                            name: 'Interactive',
-                            value: 'interactive',
-                            description: 'Run in interactive mode (default)',
-                        },
-                        {
                             name: 'Print',
                             value: 'print',
                             description: 'Print mode - execute once and return output',
@@ -77,9 +72,39 @@ class AuggieCli {
                             value: 'quiet',
                             description: 'Quiet mode - only return final output without steps',
                         },
+                        {
+                            name: 'Compact',
+                            value: 'compact',
+                            description: 'Compact mode - output tool calls, results, and final response as one line each',
+                        },
                     ],
                     default: 'print',
                     description: 'Choose how Auggie CLI should execute the command',
+                },
+                {
+                    displayName: 'Model',
+                    name: 'model',
+                    type: 'options',
+                    noDataExpression: true,
+                    options: [
+                        {
+                            name: 'Claude 3.5 Sonnet (Default)',
+                            value: 'sonnet',
+                            description: 'Claude 3.5 Sonnet - Best for complex reasoning and code',
+                        },
+                        {
+                            name: 'GPT-4o',
+                            value: 'gpt-4o',
+                            description: "GPT-4o - OpenAI's latest multimodal model",
+                        },
+                        {
+                            name: 'GPT-4o Mini',
+                            value: 'gpt-4o-mini',
+                            description: 'GPT-4o Mini - Faster and more cost-effective',
+                        },
+                    ],
+                    default: 'sonnet',
+                    description: 'Choose the AI model to use for processing',
                 },
                 {
                     displayName: 'Timeout',
@@ -125,6 +150,7 @@ class AuggieCli {
                 timeout = this.getNodeParameter('timeout', itemIndex);
                 const projectPath = this.getNodeParameter('projectPath', itemIndex);
                 const outputMode = this.getNodeParameter('outputMode', itemIndex);
+                const model = this.getNodeParameter('model', itemIndex);
                 const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex);
                 if (!prompt || prompt.trim() === '') {
                     throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Prompt is required and cannot be empty', {
@@ -137,6 +163,7 @@ class AuggieCli {
                         prompt: prompt.substring(0, 100) + '...',
                         timeout: `${timeout}s`,
                         outputMode,
+                        model,
                         projectPath: projectPath || 'current directory',
                     });
                 }
@@ -145,7 +172,13 @@ class AuggieCli {
                     args.push('--print');
                 }
                 else if (outputMode === 'quiet') {
-                    args.push('--print', '--quiet');
+                    args.push('--quiet');
+                }
+                else if (outputMode === 'compact') {
+                    args.push('--compact');
+                }
+                if (model && model !== 'sonnet') {
+                    args.push('--model', model);
                 }
                 if (additionalOptions.customArgs && additionalOptions.customArgs.trim()) {
                     const customArgs = additionalOptions.customArgs.trim().split(/\s+/);

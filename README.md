@@ -125,10 +125,16 @@ Set a project path and Auggie CLI understands your entire codebase context:
 - Understands your architecture
 - Respects your dependencies
 
+### **AI Model Selection**
+Choose the best AI model for your specific task:
+- **Claude 3.5 Sonnet**: Best for complex reasoning and code analysis (default)
+- **GPT-4o**: OpenAI's latest multimodal model for diverse tasks
+- **GPT-4o Mini**: Faster and more cost-effective for simple operations
+
 ### **Multiple Output Modes**
-- **Interactive**: Full interactive mode (default)
-- **Print**: Execute once and return output
+- **Print**: Execute once and return output (perfect for automation)
 - **Quiet**: Only return final output without intermediate steps
+- **Compact**: Tool calls, results, and responses as one line each
 
 ### **Advanced Configuration**
 Fine-tune Auggie CLI's behavior with these powerful options:

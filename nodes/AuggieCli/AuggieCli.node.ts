@@ -68,11 +68,6 @@ export class AuggieCli implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'Interactive',
-						value: 'interactive',
-						description: 'Run in interactive mode (default)',
-					},
-					{
 						name: 'Print',
 						value: 'print',
 						description: 'Print mode - execute once and return output',
@@ -82,9 +77,40 @@ export class AuggieCli implements INodeType {
 						value: 'quiet',
 						description: 'Quiet mode - only return final output without steps',
 					},
+					{
+						name: 'Compact',
+						value: 'compact',
+						description:
+							'Compact mode - output tool calls, results, and final response as one line each',
+					},
 				],
 				default: 'print',
 				description: 'Choose how Auggie CLI should execute the command',
+			},
+			{
+				displayName: 'Model',
+				name: 'model',
+				type: 'options',
+				noDataExpression: true,
+				options: [
+					{
+						name: 'Claude 3.5 Sonnet (Default)',
+						value: 'sonnet',
+						description: 'Claude 3.5 Sonnet - Best for complex reasoning and code',
+					},
+					{
+						name: 'GPT-4o',
+						value: 'gpt-4o',
+						description: "GPT-4o - OpenAI's latest multimodal model",
+					},
+					{
+						name: 'GPT-4o Mini',
+						value: 'gpt-4o-mini',
+						description: 'GPT-4o Mini - Faster and more cost-effective',
+					},
+				],
+				default: 'sonnet',
+				description: 'Choose the AI model to use for processing',
 			},
 			{
 				displayName: 'Timeout',
@@ -132,6 +158,7 @@ export class AuggieCli implements INodeType {
 				timeout = this.getNodeParameter('timeout', itemIndex) as number;
 				const projectPath = this.getNodeParameter('projectPath', itemIndex) as string;
 				const outputMode = this.getNodeParameter('outputMode', itemIndex) as string;
+				const model = this.getNodeParameter('model', itemIndex) as string;
 				const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex) as {
 					debug?: boolean;
 					customArgs?: string;
@@ -151,6 +178,7 @@ export class AuggieCli implements INodeType {
 						prompt: prompt.substring(0, 100) + '...',
 						timeout: `${timeout}s`,
 						outputMode,
+						model,
 						projectPath: projectPath || 'current directory',
 					});
 				}
@@ -162,7 +190,14 @@ export class AuggieCli implements INodeType {
 				if (outputMode === 'print') {
 					args.push('--print');
 				} else if (outputMode === 'quiet') {
-					args.push('--print', '--quiet');
+					args.push('--quiet');
+				} else if (outputMode === 'compact') {
+					args.push('--compact');
+				}
+
+				// Add model selection
+				if (model && model !== 'sonnet') {
+					args.push('--model', model);
 				}
 
 				// Add custom arguments if provided
@@ -171,7 +206,7 @@ export class AuggieCli implements INodeType {
 					args.push(...customArgs);
 				}
 
-				// Add the prompt as the last argument
+				// Add the prompt as the last argument (with quotes to ensure it's treated as a single string)
 				args.push(prompt);
 
 				// Set working directory
