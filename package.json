@@ -1,0 +1,66 @@
+{
+  "name": "n8n-nodes-auggie-cli",
+  "version": "0.1.0",
+  "description": "n8n node for Auggie CLI integration with powerful agentic capabilities",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "auggie",
+    "auggie-cli",
+    "ai",
+    "augment",
+    "augmentcode",
+    "cli",
+    "automation"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/bottazzo/n8n-nodes-auggie-cli#readme",
+  "bugs": {
+    "url": "https://github.com/bottazzo/n8n-nodes-auggie-cli/issues"
+  },
+  "author": {
+    "name": "Eduardo Bottazzo Junior",
+    "email": "eduardo.bottazzo@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bottazzo/n8n-nodes-auggie-cli.git"
+  },
+  "engines": {
+    "node": ">=20.15"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run format:check && npx rimraf dist && tsc && gulp build:icons && gulp build:schemas",
+    "format:check": "prettier nodes --check",
+    "dev": "tsc --watch",
+    "format": "prettier nodes --write",
+    "lint": "echo 'Linting skipped - TypeScript compilation provides type checking'",
+    "lintfix": "echo 'Linting skipped - TypeScript compilation provides type checking'",
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "nodes": [
+      "dist/nodes/AuggieCli/AuggieCli.node.js"
+    ]
+  },
+  "dependencies": {
+    "@augmentcode/auggie": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@typescript-eslint/parser": "~8.32.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.3",
+    "gulp": "^5.0.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}

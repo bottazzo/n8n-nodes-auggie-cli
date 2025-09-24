@@ -1,0 +1,309 @@
+import type {
+	IExecuteFunctions,
+	INodeExecutionData,
+	INodeType,
+	INodeTypeDescription,
+} from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
+import { spawn } from 'child_process';
+
+export class AuggieCli implements INodeType {
+	description: INodeTypeDescription = {
+		displayName: 'Auggie CLI',
+		name: 'auggieCli',
+		icon: 'file:auggie.svg',
+		group: ['transform'],
+		version: 1,
+		subtitle: '={{$parameter["operation"] + ": " + $parameter["prompt"]}}',
+		description:
+			'Use Auggie CLI to execute AI-powered coding tasks with powerful agentic capabilities',
+		defaults: {
+			name: 'Auggie CLI',
+		},
+		inputs: ['main'],
+		outputs: ['main'],
+		properties: [
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				options: [
+					{
+						name: 'Execute',
+						value: 'execute',
+						description: 'Execute a command with Auggie CLI',
+						action: 'Execute a command with auggie cli',
+					},
+				],
+				default: 'execute',
+			},
+			{
+				displayName: 'Prompt',
+				name: 'prompt',
+				type: 'string',
+				typeOptions: {
+					rows: 4,
+				},
+				default: '',
+				description: 'The prompt or instruction to send to Auggie CLI',
+				required: true,
+				placeholder: 'e.g., "Create a Python function to parse CSV files"',
+				hint: 'Use expressions like {{$json.prompt}} to use data from previous nodes',
+			},
+			{
+				displayName: 'Project Path',
+				name: 'projectPath',
+				type: 'string',
+				default: '',
+				description:
+					'The directory path where Auggie CLI should run (e.g., /path/to/project). If empty, uses the current working directory.',
+				placeholder: '/home/user/projects/my-app',
+				hint: 'This sets the working directory for Auggie CLI, allowing it to access files and run commands in the specified project location',
+			},
+			{
+				displayName: 'Output Mode',
+				name: 'outputMode',
+				type: 'options',
+				noDataExpression: true,
+				options: [
+					{
+						name: 'Interactive',
+						value: 'interactive',
+						description: 'Run in interactive mode (default)',
+					},
+					{
+						name: 'Print',
+						value: 'print',
+						description: 'Print mode - execute once and return output',
+					},
+					{
+						name: 'Quiet',
+						value: 'quiet',
+						description: 'Quiet mode - only return final output without steps',
+					},
+				],
+				default: 'print',
+				description: 'Choose how Auggie CLI should execute the command',
+			},
+			{
+				displayName: 'Timeout',
+				name: 'timeout',
+				type: 'number',
+				default: 300,
+				description: 'Maximum time to wait for completion (in seconds) before aborting',
+			},
+			{
+				displayName: 'Additional Options',
+				name: 'additionalOptions',
+				type: 'collection',
+				placeholder: 'Add Option',
+				default: {},
+				options: [
+					{
+						displayName: 'Debug Mode',
+						name: 'debug',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to enable debug logging',
+					},
+					{
+						displayName: 'Custom Arguments',
+						name: 'customArgs',
+						type: 'string',
+						default: '',
+						description: 'Additional command line arguments to pass to Auggie CLI',
+						placeholder: '--verbose --config /path/to/config',
+					},
+				],
+			},
+		],
+	};
+
+	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+		const items = this.getInputData();
+		const returnData: INodeExecutionData[] = [];
+
+		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+			let timeout = 300; // Default timeout
+			try {
+				// const operation = this.getNodeParameter('operation', itemIndex) as string;
+				const prompt = this.getNodeParameter('prompt', itemIndex) as string;
+				timeout = this.getNodeParameter('timeout', itemIndex) as number;
+				const projectPath = this.getNodeParameter('projectPath', itemIndex) as string;
+				const outputMode = this.getNodeParameter('outputMode', itemIndex) as string;
+				const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex) as {
+					debug?: boolean;
+					customArgs?: string;
+				};
+
+				// Validate required parameters
+				if (!prompt || prompt.trim() === '') {
+					throw new NodeOperationError(this.getNode(), 'Prompt is required and cannot be empty', {
+						itemIndex,
+					});
+				}
+
+				// Log start
+				if (additionalOptions.debug) {
+					this.logger.debug('Starting Auggie CLI execution', {
+						itemIndex,
+						prompt: prompt.substring(0, 100) + '...',
+						timeout: `${timeout}s`,
+						outputMode,
+						projectPath: projectPath || 'current directory',
+					});
+				}
+
+				// Build command arguments
+				const args: string[] = [];
+
+				// Add output mode flags
+				if (outputMode === 'print') {
+					args.push('--print');
+				} else if (outputMode === 'quiet') {
+					args.push('--print', '--quiet');
+				}
+
+				// Add custom arguments if provided
+				if (additionalOptions.customArgs && additionalOptions.customArgs.trim()) {
+					const customArgs = additionalOptions.customArgs.trim().split(/\s+/);
+					args.push(...customArgs);
+				}
+
+				// Add the prompt as the last argument
+				args.push(prompt);
+
+				// Set working directory
+				const cwd = projectPath && projectPath.trim() !== '' ? projectPath.trim() : process.cwd();
+
+				if (additionalOptions.debug) {
+					this.logger.debug('Executing Auggie CLI command', {
+						command: 'auggie',
+						args,
+						cwd,
+					});
+				}
+
+				// Execute Auggie CLI
+				const startTime = Date.now();
+				const result = await executeAuggieCli(args, cwd, timeout, additionalOptions.debug);
+				const duration = Date.now() - startTime;
+
+				if (additionalOptions.debug) {
+					this.logger.debug('Auggie CLI execution completed', {
+						durationMs: duration,
+						success: result.success,
+						outputLength: result.output.length,
+					});
+				}
+
+				// Return the result
+				returnData.push({
+					json: {
+						result: result.output,
+						success: result.success,
+						duration_ms: duration,
+						command: `auggie ${args.join(' ')}`,
+						exitCode: result.exitCode,
+						error: result.error || null,
+					},
+					pairedItem: { item: itemIndex },
+				});
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+				const isTimeout = error instanceof Error && error.message.includes('timeout');
+
+				if (this.continueOnFail()) {
+					returnData.push({
+						json: {
+							error: errorMessage,
+							errorType: isTimeout ? 'timeout' : 'execution_error',
+							errorDetails: error instanceof Error ? error.stack : undefined,
+							itemIndex,
+						},
+						pairedItem: itemIndex,
+					});
+					continue;
+				}
+
+				// Provide more specific error messages
+				const userFriendlyMessage = isTimeout
+					? `Operation timed out after ${timeout} seconds. Consider increasing the timeout.`
+					: `Auggie CLI execution failed: ${errorMessage}`;
+
+				throw new NodeOperationError(this.getNode(), userFriendlyMessage, {
+					itemIndex,
+					description: errorMessage,
+				});
+			}
+		}
+
+		return [returnData];
+	}
+}
+
+async function executeAuggieCli(
+	args: string[],
+	cwd: string,
+	timeout: number,
+	debug?: boolean,
+): Promise<{ output: string; success: boolean; exitCode: number; error?: string }> {
+	return new Promise((resolve, reject) => {
+		const timeoutMs = timeout * 1000;
+		let output = '';
+		let errorOutput = '';
+
+		// Spawn the auggie process
+		const child = spawn('auggie', args, {
+			cwd,
+			stdio: ['pipe', 'pipe', 'pipe'],
+			shell: true,
+		});
+
+		// Set up timeout
+		const timeoutId = setTimeout(() => {
+			child.kill('SIGTERM');
+			reject(new Error(`Auggie CLI execution timed out after ${timeout} seconds`));
+		}, timeoutMs);
+
+		// Collect stdout
+		child.stdout?.on('data', (data) => {
+			const chunk = data.toString();
+			output += chunk;
+			if (debug) {
+				console.log('Auggie stdout:', chunk);
+			}
+		});
+
+		// Collect stderr
+		child.stderr?.on('data', (data) => {
+			const chunk = data.toString();
+			errorOutput += chunk;
+			if (debug) {
+				console.error('Auggie stderr:', chunk);
+			}
+		});
+
+		// Handle process completion
+		child.on('close', (code) => {
+			clearTimeout(timeoutId);
+
+			const success = code === 0;
+			const finalOutput = output || errorOutput;
+
+			resolve({
+				output: finalOutput,
+				success,
+				exitCode: code || 0,
+				error: success ? undefined : errorOutput || 'Process failed with no error output',
+			});
+		});
+
+		// Handle process errors
+		child.on('error', (error) => {
+			clearTimeout(timeoutId);
+			reject(new Error(`Failed to start Auggie CLI: ${error.message}`));
+		});
+	});
+}
