@@ -206,7 +206,7 @@ export class AuggieCli implements INodeType {
 					args.push(...customArgs);
 				}
 
-				// Add the prompt as the last argument (with quotes to ensure it's treated as a single string)
+				// Add the prompt as the last argument (will be properly quoted in executeAuggieCli)
 				args.push(prompt);
 
 				// Set working directory
@@ -289,8 +289,19 @@ async function executeAuggieCli(
 		let output = '';
 		let errorOutput = '';
 
+		// Prepare arguments - ensure the last argument (prompt) is properly quoted
+		const processedArgs = [...args];
+		if (processedArgs.length > 0) {
+			const lastArgIndex = processedArgs.length - 1;
+			const lastArg = processedArgs[lastArgIndex];
+			// If the last argument contains spaces and isn't already quoted, quote it
+			if (lastArg.includes(' ') && !lastArg.startsWith('"')) {
+				processedArgs[lastArgIndex] = `"${lastArg.replace(/"/g, '\\"')}"`;
+			}
+		}
+
 		// Spawn the auggie process
-		const child = spawn('auggie', args, {
+		const child = spawn('auggie', processedArgs, {
 			cwd,
 			stdio: ['pipe', 'pipe', 'pipe'],
 			shell: true,

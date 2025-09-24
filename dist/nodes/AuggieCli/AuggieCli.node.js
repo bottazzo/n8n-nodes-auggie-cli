@@ -249,7 +249,15 @@ async function executeAuggieCli(args, cwd, timeout, debug) {
         const timeoutMs = timeout * 1000;
         let output = '';
         let errorOutput = '';
-        const child = (0, child_process_1.spawn)('auggie', args, {
+        const processedArgs = [...args];
+        if (processedArgs.length > 0) {
+            const lastArgIndex = processedArgs.length - 1;
+            const lastArg = processedArgs[lastArgIndex];
+            if (lastArg.includes(' ') && !lastArg.startsWith('"')) {
+                processedArgs[lastArgIndex] = `"${lastArg.replace(/"/g, '\\"')}"`;
+            }
+        }
+        const child = (0, child_process_1.spawn)('auggie', processedArgs, {
             cwd,
             stdio: ['pipe', 'pipe', 'pipe'],
             shell: true,
