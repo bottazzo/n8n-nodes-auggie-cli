@@ -127,9 +127,9 @@ Set a project path and Auggie CLI understands your entire codebase context:
 
 ### **AI Model Selection**
 Choose the best AI model for your specific task:
-- **Claude 3.5 Sonnet**: Best for complex reasoning and code analysis (default)
-- **GPT-4o**: OpenAI's latest multimodal model for diverse tasks
-- **GPT-4o Mini**: Faster and more cost-effective for simple operations
+- **Claude Sonnet 4.5**: Latest and most capable model by Anthropic (default)
+- **Claude Sonnet 4**: Powerful reasoning and code understanding
+- **GPT-5**: Latest OpenAI model with advanced capabilities
 
 ### **Multiple Output Modes**
 - **Print**: Execute once and return output (perfect for automation)

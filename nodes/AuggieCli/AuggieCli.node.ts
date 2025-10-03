@@ -94,22 +94,22 @@ export class AuggieCli implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'Claude 3.5 Sonnet (Default)',
-						value: 'sonnet',
-						description: 'Claude 3.5 Sonnet - Best for complex reasoning and code',
+						name: 'Claude Sonnet 4.5 (Default)',
+						value: 'sonnet-4.5',
+						description: 'Claude Sonnet 4.5 by Anthropic - Latest and most capable model',
 					},
 					{
-						name: 'GPT-4o',
-						value: 'gpt-4o',
-						description: "GPT-4o - OpenAI's latest multimodal model",
+						name: 'Claude Sonnet 4',
+						value: 'sonnet-4',
+						description: 'Claude Sonnet 4 by Anthropic - Powerful reasoning and code understanding',
 					},
 					{
-						name: 'GPT-4o Mini',
-						value: 'gpt-4o-mini',
-						description: 'GPT-4o Mini - Faster and more cost-effective',
+						name: 'GPT-5',
+						value: 'gpt-5',
+						description: 'GPT-5 by OpenAI - Latest OpenAI model with advanced capabilities',
 					},
 				],
-				default: 'sonnet',
+				default: 'sonnet-4.5',
 				description: 'Choose the AI model to use for processing',
 			},
 			{
@@ -196,7 +196,7 @@ export class AuggieCli implements INodeType {
 				}
 
 				// Add model selection
-				if (model && model !== 'sonnet') {
+				if (model && model !== 'sonnet-4.5') {
 					args.push('--model', model);
 				}
 
